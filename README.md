@@ -10,11 +10,11 @@ This condition is always satisfied as-is, since a single panel is only 44.7 unit
 
 I assumed a mount can support a single panel at a time (as opposed to two simultaneously, which the diagram might suggest).
 
-The diagram contains an error — it marks where an additional mount should be placed because a single panel is not part of the group above it, violating the Cantilever Limit condition.
+The diagram contains an error, it marks where an additional mount should be placed because a single panel is not part of the group above it, violating the Cantilever Limit condition.
 
 <img width="70%" height="70%" alt="image" src="https://github.com/user-attachments/assets/00286175-700b-44fc-b1d8-98b39b3757b6" />
 
-I also assume there is no limit on the number of panels in a group, and that "continuous segment of panels" applies to a single panel as well — as suggested by the bottom-right mount on the bottom-left panel in the diagram.
+I also assume there is no limit on the number of panels in a group, and that "continuous segment of panels" applies to a single panel as well, as suggested by the bottom-right mount on the bottom-left panel in the diagram.
 
 ---
 
