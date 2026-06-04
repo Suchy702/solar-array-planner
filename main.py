@@ -24,12 +24,20 @@ JOINT_GAP = Decimal("1")
 
 class DataValidator:
     def validate(self, panels: object) -> list[PanelPos]:
+        """
+        Validating the input data:
+            - Must be a list of dicts with 'x' and 'y' keys.
+            - 'x' and 'y' must be numbers.
+            - Panels must not overlap (considering their width and height).
+        """
         if not isinstance(panels, list):
             raise TypeError("panels must be a list")
         result: list[PanelPos] = []
         for i, item in enumerate(panels):
             if not isinstance(item, dict) or set(item.keys()) != {"x", "y"}:
-                raise TypeError(f"panels[{i}] must be a dict with exactly keys 'x' and 'y'")
+                raise TypeError(
+                    f"panels[{i}] must be a dict with exactly keys 'x' and 'y'"
+                )
             for key in ("x", "y"):
                 if not isinstance(item[key], (int, float, Decimal)):
                     raise TypeError(f"panels[{i}]['{key}'] must be a number")
@@ -57,34 +65,34 @@ class DataValidator:
 class JointsPlacer:
     connections: dict[tuple[Decimal, Decimal], list[tuple[Decimal, Decimal]]] = {}
 
-    def divide_to_corners(self, panels: list[PanelPos]) -> list[CornerPos]:
+    def _divide_to_corners(self, panels: list[PanelPos]) -> list[CornerPos]:
         """Expands each panel's top-left corner into all four corner positions."""
         corners: list[CornerPos] = []
         for panel in panels:
             x, y = panel["x"], panel["y"]
-            corners.append({"x": x,                  "y": y})
-            corners.append({"x": x + PANEL_WIDTH,     "y": y})
-            corners.append({"x": x,                  "y": y + PANEL_HEIGHT})
-            corners.append({"x": x + PANEL_WIDTH,     "y": y + PANEL_HEIGHT})
+            corners.append({"x": x, "y": y})
+            corners.append({"x": x + PANEL_WIDTH, "y": y})
+            corners.append({"x": x, "y": y + PANEL_HEIGHT})
+            corners.append({"x": x + PANEL_WIDTH, "y": y + PANEL_HEIGHT})
         return corners
 
-    def divide_to_rows(self, panels: list[CornerPos]) -> list[list[CornerPos]]:
+    def _divide_to_rows(self, panels: list[CornerPos]) -> list[list[CornerPos]]:
         """Groups corners by y coordinate, each row sorted by x ascending."""
         rows: dict[Decimal, list[CornerPos]] = {}
         for corner in panels:
             rows.setdefault(corner["y"], []).append(corner)
         return [sorted(row, key=lambda p: p["x"]) for row in rows.values()]
 
-    def divide_to_columns(self, panels: list[CornerPos]) -> list[list[CornerPos]]:
+    def _divide_to_columns(self, panels: list[CornerPos]) -> list[list[CornerPos]]:
         """Groups corners by x coordinate, each column sorted by y ascending."""
         columns: dict[Decimal, list[CornerPos]] = {}
         for corner in panels:
             columns.setdefault(corner["x"], []).append(corner)
         return [sorted(col, key=lambda p: p["y"]) for col in columns.values()]
 
-    def find_connections(self, panels: list[PanelPos]) -> None:
-        """Populates connections: maps each corner to its neighbours whose edge distance is less than 1."""
-        corners = self.divide_to_corners(panels)
+    def _find_connections(self, panels: list[PanelPos]) -> None:
+        """Populates connections: maps each corner to its neighbours."""
+        corners = self._divide_to_corners(panels)
         self.connections = {}
 
         def _key(c: CornerPos) -> tuple[Decimal, Decimal]:
@@ -94,13 +102,13 @@ class JointsPlacer:
             self.connections.setdefault(_key(a), []).append(_key(b))
             self.connections.setdefault(_key(b), []).append(_key(a))
 
-        for row in self.divide_to_rows(corners):
+        for row in self._divide_to_rows(corners):
             for i in range(len(row) - 1):
                 a, b = row[i], row[i + 1]
                 if b["x"] - a["x"] < JOINT_GAP:
                     _register(a, b)
 
-        for col in self.divide_to_columns(corners):
+        for col in self._divide_to_columns(corners):
             for i in range(len(col) - 1):
                 a, b = col[i], col[i + 1]
                 if b["y"] - a["y"] < JOINT_GAP:
@@ -109,10 +117,17 @@ class JointsPlacer:
     def _is_vertical_pair(self, group: list[tuple[Decimal, Decimal]]) -> bool:
         return len(group) == 2 and group[0][0] == group[1][0]
 
-    def find_joints_positions(self, panels: list[PanelPos]) -> list[tuple[Decimal, Decimal]]:
-        """Returns joint center positions, merging groups of up to 4 connected corners into a single point."""
-        self.find_connections(panels)
-        sorted_connections = sorted(self.connections.items(), key=lambda item: len(item[1]), reverse=True)
+    def find_joints_positions(
+        self, panels: list[PanelPos]
+    ) -> list[tuple[Decimal, Decimal]]:
+        """
+        Returns joint center positions, merging groups of up to 4
+        connected corners into a single point.
+        """
+        self._find_connections(panels)
+        sorted_connections = sorted(
+            self.connections.items(), key=lambda item: len(item[1]), reverse=True
+        )
         already_jointed: set[tuple[Decimal, Decimal]] = set()
         joints: list[tuple[Decimal, Decimal]] = []
 
@@ -142,9 +157,9 @@ class MountsPlacer:
         self.bias = min(p["x"] for p in panels)
         return [{"x": p["x"] - self.bias, "y": p["y"]} for p in panels]
 
-    def choose_first_rafter_position(self, panels: list[PanelPos]) -> Decimal:
+    def _choose_first_rafter_position(self, panels: list[PanelPos]) -> Decimal:
         normalized = self._compute_and_apply_bias(panels)
-        self.divide_to_segments(normalized)
+        self._divide_to_segments(normalized)
 
         feasible_min = Decimal("-Infinity")
         feasible_max = Decimal("Infinity")
@@ -166,18 +181,46 @@ class MountsPlacer:
             seg_max = min(l_max, p_max)
 
             if seg_min > seg_max:
-                raise ValueError(f"No valid rafter position for segment x={x_start}..{x_end}")
+                raise ValueError(
+                    f"No valid rafter position for segment x={x_start}..{x_end}"
+                )
 
             feasible_min = max(feasible_min, seg_min)
             feasible_max = min(feasible_max, seg_max)
 
         if feasible_min > feasible_max:
-            raise ValueError("No common first rafter position exists across all segments")
+            raise ValueError(
+                "No common first rafter position exists across all segments"
+            )
 
         return feasible_min
 
-    def find_mounts_positions(self, panels: list[PanelPos]) -> list[tuple[Decimal, Decimal]]:
-        r0 = self.choose_first_rafter_position(panels)
+    def _divide_to_segments(self, panels: list[PanelPos]) -> None:
+        """Groups panels into horizontal segments"""
+        rows = {}
+        for panel in panels:
+            rows.setdefault(panel["y"], []).append(panel)
+
+        self.segments = []
+        for row in rows.values():
+            row_sorted = sorted(row, key=lambda p: p["x"])
+            current = [row_sorted[0]]
+            for prev, next_ in zip(row_sorted, row_sorted[1:]):
+                if next_["x"] - (prev["x"] + PANEL_WIDTH) > JOINT_GAP:
+                    self.segments.append(current)
+                    current = []
+                current.append(next_)
+            self.segments.append(current)
+
+    def find_mounts_positions(
+        self, panels: list[PanelPos]
+    ) -> list[tuple[Decimal, Decimal]]:
+        """
+        Finding first rafter position that allows placing rafters with the given spacing on all segments, 
+        then calculating all rafter positions and corresponding mounts, 
+        ensuring edge clearance and cantilever limits are respected.
+        """
+        r0 = self._choose_first_rafter_position(panels)
         mounts = []
         step = int(SPAN_LIMIT / RAFTER_SPACING)
 
@@ -216,26 +259,12 @@ class MountsPlacer:
 
         return [(x + self.bias, y) for x, y in mounts]
 
-    def divide_to_segments(self, panels: list[PanelPos]) -> None:
-        """Groups panels into horizontal segments; breaks the segment when the gap between adjacent panels exceeds 1."""
-        rows = {}
-        for panel in panels:
-            rows.setdefault(panel["y"], []).append(panel)
-
-        self.segments = []
-        for row in rows.values():
-            row_sorted = sorted(row, key=lambda p: p["x"])
-            current = [row_sorted[0]]
-            for prev, next_ in zip(row_sorted, row_sorted[1:]):
-                if next_["x"] - (prev["x"] + PANEL_WIDTH) > JOINT_GAP:
-                    self.segments.append(current)
-                    current = []
-                current.append(next_)
-            self.segments.append(current)
-
 
 class SolarSupportersPlacer:
     def place(self, panels: object) -> dict:
+        """
+        Find mount and joint positions for the given panel layout, ensuring all constraints are met.
+        """
         validated = DataValidator().validate(panels)
         mounts_placer = MountsPlacer()
         joints_placer = JointsPlacer()

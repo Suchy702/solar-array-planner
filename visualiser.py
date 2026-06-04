@@ -14,8 +14,12 @@ def to_canvas(x: float, y: float, canvas_height: float) -> tuple[float, float]:
 
 
 def visualise(panels: list[PanelPos], joints: list[dict], mounts: list[dict]) -> None:
-    all_x = [float(p["x"]) for p in panels] + [float(p["x"]) + float(PANEL_WIDTH) for p in panels]
-    all_y = [float(p["y"]) for p in panels] + [float(p["y"]) + float(PANEL_HEIGHT) for p in panels]
+    all_x = [float(p["x"]) for p in panels] + [
+        float(p["x"]) + float(PANEL_WIDTH) for p in panels
+    ]
+    all_y = [float(p["y"]) for p in panels] + [
+        float(p["y"]) + float(PANEL_HEIGHT) for p in panels
+    ]
     width = (max(all_x) - min(all_x)) * SCALE + 2 * MARGIN
     height = (max(all_y) - min(all_y)) * SCALE + 2 * MARGIN
 
@@ -25,14 +29,22 @@ def visualise(panels: list[PanelPos], joints: list[dict], mounts: list[dict]) ->
     canvas.pack()
 
     for panel in panels:
-        x0, y0 = to_canvas(float(panel["x"]), float(panel["y"]) + float(PANEL_HEIGHT), height)
-        x1, y1 = to_canvas(float(panel["x"]) + float(PANEL_WIDTH), float(panel["y"]), height)
-        canvas.create_rectangle(x0, y0, x1, y1, fill="#4682b4", outline="black", width=1)
+        x0, y0 = to_canvas(
+            float(panel["x"]), float(panel["y"]) + float(PANEL_HEIGHT), height
+        )
+        x1, y1 = to_canvas(
+            float(panel["x"]) + float(PANEL_WIDTH), float(panel["y"]), height
+        )
+        canvas.create_rectangle(
+            x0, y0, x1, y1, fill="#4682b4", outline="black", width=1
+        )
 
     for joint in joints:
         cx, cy = to_canvas(joint["x"], joint["y"], height)
         half = JOINT_SIZE * SCALE / 2
-        canvas.create_rectangle(cx - half, cy - half, cx + half, cy + half, fill="gray", outline="")
+        canvas.create_rectangle(
+            cx - half, cy - half, cx + half, cy + half, fill="gray", outline=""
+        )
 
     for mount in mounts:
         cx, cy = to_canvas(mount["x"], mount["y"], height)
@@ -45,7 +57,9 @@ def visualise(panels: list[PanelPos], joints: list[dict], mounts: list[dict]) ->
 if __name__ == "__main__":
     with open("input.json") as f:
         data = json.load(f)
-    panels: list[PanelPos] = [{"x": Decimal(str(p["x"])), "y": Decimal(str(p["y"]))} for p in data]
+    panels: list[PanelPos] = [
+        {"x": Decimal(str(p["x"])), "y": Decimal(str(p["y"]))} for p in data
+    ]
 
     with open("output.json") as f:
         output = json.load(f)

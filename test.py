@@ -2,8 +2,11 @@ import json
 import pytest
 from decimal import Decimal as D
 from main import (
-    SolarSupportersPlacer, DataValidator,
-    PANEL_WIDTH, PANEL_HEIGHT, EDGE_CLEARANCE, SPAN_LIMIT,
+    SolarSupportersPlacer,
+    DataValidator,
+    PANEL_WIDTH,
+    EDGE_CLEARANCE,
+    SPAN_LIMIT,
 )
 
 
@@ -27,6 +30,7 @@ def max_mount_spacing(mounts: list[dict]) -> float:
 
 
 # DataValidator
+
 
 def test_validator_rejects_non_list():
     with pytest.raises(TypeError):
@@ -61,6 +65,7 @@ def test_validator_accepts_valid_panels():
 
 # SolarSupportersPlacer
 
+
 def test_empty_panels_raises():
     with pytest.raises(Exception):
         SolarSupportersPlacer().place([])
@@ -84,7 +89,11 @@ def test_single_panel_offset():
 
     assert len(result["mounts"]) == 4
     for m in result["mounts"]:
-        assert offset + float(EDGE_CLEARANCE) <= m["x"] <= offset + float(PANEL_WIDTH - EDGE_CLEARANCE)
+        assert (
+            offset + float(EDGE_CLEARANCE)
+            <= m["x"]
+            <= offset + float(PANEL_WIDTH - EDGE_CLEARANCE)
+        )
 
 
 def test_five_panels_in_a_row():
@@ -120,7 +129,7 @@ def test_overlapping_panels_raises():
 
 
 def test_incompatible_segments_raises():
-    row0 = [p(i * (PANEL_WIDTH + GAP), 0)    for i in range(4)]
+    row0 = [p(i * (PANEL_WIDTH + GAP), 0) for i in range(4)]
     row1 = [p(i * (PANEL_WIDTH + GAP), 71.6) for i in range(9)]
     with pytest.raises(ValueError, match="No common first rafter position"):
         SolarSupportersPlacer().place(row0 + row1)
