@@ -13,10 +13,14 @@
    - `mounts` — list of mount positions `{"x": ..., "y": ...}`
    - `joints` — list of joint positions `{"x": ..., "y": ...}`
 
-To run the visualiser (requires `tkinter`, included in most Python installations):
+To run the visualiser (requires `tkinter`):
 ```bash
 python3 visualiser.py
 ```
+
+<img width="70%" height="70%" alt="image" src="https://github.com/user-attachments/assets/013ce81a-9f15-4c8f-96ca-3c06e1c72c79" />
+
+Visualisation of mounts and joints of test data.
 
 To run the tests (requires `pytest`):
 ```bash
@@ -27,11 +31,14 @@ python3 -m pytest test.py -v
 
 ## Observations & Assumptions
 
+### Complexity
+The solution has a time complexity of `O(nlogn)`, where `n` is the number of panels.
+
 ### Span Limit
 
 > The distance between any two consecutive supports on a single panel cannot exceed 48 units.
 
-This condition is always satisfied as-is, since a single panel is only 44.7 units wide. Based on the reference diagram, the intended interpretation is the distance between **groups** of panels, not individual ones.
+This condition is always satisfied as-is, since a single panel is only 44.7 units wide. Based on the reference diagram, the intended interpretation is the distance between **segments** of panels, not individual ones.
 
 I assumed a mount can support a single panel at a time (as opposed to two simultaneously, which the diagram might suggest).
 
