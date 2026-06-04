@@ -1,5 +1,30 @@
 # Solar Array Planner
 
+## Usage
+
+**Requirements:** Python 3.9+, no external dependencies.
+
+1. Define the panel layout in `input.json` as a list of `{"x": <number>, "y": <number>}` objects (top-left corner of each panel).
+2. Run the planner:
+   ```bash
+   python3 main.py
+   ```
+3. Results are written to `output.json` with two keys:
+   - `mounts` — list of mount positions `{"x": ..., "y": ...}`
+   - `joints` — list of joint positions `{"x": ..., "y": ...}`
+
+To run the visualiser (requires `tkinter`, included in most Python installations):
+```bash
+python3 visualiser.py
+```
+
+To run the tests (requires `pytest`):
+```bash
+python3 -m pytest test.py -v
+```
+
+---
+
 ## Observations & Assumptions
 
 ### Span Limit
