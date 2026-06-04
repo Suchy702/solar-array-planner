@@ -66,9 +66,16 @@ def test_validator_accepts_valid_panels():
 # SolarSupportersPlacer
 
 
-def test_empty_panels_raises():
-    with pytest.raises(Exception):
-        SolarSupportersPlacer().place([])
+def test_empty_panels_returns_empty_result():
+    result = SolarSupportersPlacer().place([])
+    assert result == {"mounts": [], "joints": []}
+
+
+def test_two_panels_gap_exactly_joint_gap_produces_no_joints():
+    from main import JOINT_GAP
+    panels = [p(0, 0), p(PANEL_WIDTH + JOINT_GAP, 0)]
+    result = SolarSupportersPlacer().place(panels)
+    assert result["joints"] == []
 
 
 def test_single_panel():

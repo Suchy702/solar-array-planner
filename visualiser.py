@@ -9,8 +9,10 @@ JOINT_SIZE = 2.5
 MOUNT_RADIUS = 1.5
 
 
-def to_canvas(x: float, y: float, canvas_height: float) -> tuple[float, float]:
-    return MARGIN + x * SCALE, canvas_height - MARGIN - y * SCALE
+def to_canvas(
+    x: float, y: float, canvas_height: float, min_x: float, min_y: float
+) -> tuple[float, float]:
+    return MARGIN + (x - min_x) * SCALE, canvas_height - MARGIN - (y - min_y) * SCALE
 
 
 def visualise(panels: list[PanelPos], joints: list[dict], mounts: list[dict]) -> None:
@@ -20,8 +22,9 @@ def visualise(panels: list[PanelPos], joints: list[dict], mounts: list[dict]) ->
     all_y = [float(p["y"]) for p in panels] + [
         float(p["y"]) + float(PANEL_HEIGHT) for p in panels
     ]
-    width = (max(all_x) - min(all_x)) * SCALE + 2 * MARGIN
-    height = (max(all_y) - min(all_y)) * SCALE + 2 * MARGIN
+    min_x, min_y = min(all_x), min(all_y)
+    width = (max(all_x) - min_x) * SCALE + 2 * MARGIN
+    height = (max(all_y) - min_y) * SCALE + 2 * MARGIN
 
     root = tk.Tk()
     root.title("Solar array layout")
@@ -30,24 +33,24 @@ def visualise(panels: list[PanelPos], joints: list[dict], mounts: list[dict]) ->
 
     for panel in panels:
         x0, y0 = to_canvas(
-            float(panel["x"]), float(panel["y"]) + float(PANEL_HEIGHT), height
+            float(panel["x"]), float(panel["y"]) + float(PANEL_HEIGHT), height, min_x, min_y
         )
         x1, y1 = to_canvas(
-            float(panel["x"]) + float(PANEL_WIDTH), float(panel["y"]), height
+            float(panel["x"]) + float(PANEL_WIDTH), float(panel["y"]), height, min_x, min_y
         )
         canvas.create_rectangle(
             x0, y0, x1, y1, fill="#4682b4", outline="black", width=1
         )
 
     for joint in joints:
-        cx, cy = to_canvas(joint["x"], joint["y"], height)
+        cx, cy = to_canvas(joint["x"], joint["y"], height, min_x, min_y)
         half = JOINT_SIZE * SCALE / 2
         canvas.create_rectangle(
             cx - half, cy - half, cx + half, cy + half, fill="gray", outline=""
         )
 
     for mount in mounts:
-        cx, cy = to_canvas(mount["x"], mount["y"], height)
+        cx, cy = to_canvas(mount["x"], mount["y"], height, min_x, min_y)
         r = MOUNT_RADIUS * SCALE
         canvas.create_oval(cx - r, cy - r, cx + r, cy + r, fill="black", outline="")
 

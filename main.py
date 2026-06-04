@@ -63,7 +63,8 @@ class DataValidator:
 
 
 class JointsPlacer:
-    connections: dict[tuple[Decimal, Decimal], list[tuple[Decimal, Decimal]]] = {}
+    def __init__(self) -> None:
+        self.connections: dict[tuple[Decimal, Decimal], list[tuple[Decimal, Decimal]]] = {}
 
     def _divide_to_corners(self, panels: list[PanelPos]) -> list[CornerPos]:
         """Expands each panel's top-left corner into all four corner positions."""
@@ -150,8 +151,9 @@ class JointsPlacer:
 
 
 class MountsPlacer:
-    segments: list[list[PanelPos]] = []
-    bias: Decimal = Decimal("0")
+    def __init__(self) -> None:
+        self.segments: list[list[PanelPos]] = []
+        self.bias: Decimal = Decimal("0")
 
     def _compute_and_apply_bias(self, panels: list[PanelPos]) -> list[PanelPos]:
         self.bias = min(p["x"] for p in panels)
@@ -173,7 +175,7 @@ class MountsPlacer:
             width = x_end - x_start
 
             l_min = EDGE_CLEARANCE
-            l_max = RAFTER_SPACING
+            l_max = CANTILEVER_LIMIT
             p_min = width - RAFTER_SPACING - n * RAFTER_SPACING
             p_max = width - EDGE_CLEARANCE - n * RAFTER_SPACING
 
@@ -266,6 +268,9 @@ class SolarSupportersPlacer:
         Find mount and joint positions for the given panel layout, ensuring all constraints are met.
         """
         validated = DataValidator().validate(panels)
+        if not validated:
+            return {"mounts": [], "joints": []}
+
         mounts_placer = MountsPlacer()
         joints_placer = JointsPlacer()
 
